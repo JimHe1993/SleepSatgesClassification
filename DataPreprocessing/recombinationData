@@ -1,13 +1,10 @@
-% 数据拼接，注意不同被试采集信号的增益不同
-% by Jim 2018.10.11
 function recombinationData
-    d1 = load('./data/slp48m1.mat');
-    d2 = load('./data/slp48m2.mat');
-    d3 = load('./data/slp48m3.mat');
-    d4 = load('./data/slp48m4.mat');
-    d5 = load('./data/slp48m5.mat');
-    d6 = load('./data/slp48m6.mat');
-    d7 = load('./data/slp48m7.mat');
+    d1 = load('./data/slp32m1.mat');
+    d2 = load('./data/slp32m2.mat');
+    d3 = load('./data/slp32m3.mat');
+    d4 = load('./data/slp32m4.mat');
+    d5 = load('./data/slp32m5.mat');
+    d6 = load('./data/slp32m6.mat');
 %%
 %---胸部呼吸数据重组
     resp_chest1 = d1.val(5, :);
@@ -16,17 +13,15 @@ function recombinationData
     resp_chest4 = d4.val(5, :);
     resp_chest5 = d5.val(5, :);
     resp_chest6 = d6.val(5, :);
-    resp_chest7 = d7.val(5, :);
 
-    resp_chest1 = (resp_chest1 + 0) ./ ((-1) * 596);
-    resp_chest2 = (resp_chest2 + 0) ./ ((-1) * 596);
-    resp_chest3 = (resp_chest3 + 0) ./ ((-1) * 596);
-    resp_chest4 = (resp_chest4 + 0) ./ ((-1) * 596);
-    resp_chest5 = (resp_chest5 + 0) ./ ((-1) * 596);
-    resp_chest6 = (resp_chest6 + 0) ./ ((-1) * 596);
-    resp_chest7 = (resp_chest7 + 0) ./ ((-1) * 596);
+    resp_chest1 = (resp_chest1 + 0) ./ ((-1) * 2226);
+    resp_chest2 = (resp_chest2 + 0) ./ ((-1) * 2226);
+    resp_chest3 = (resp_chest3 + 0) ./ ((-1) * 2226);
+    resp_chest4 = (resp_chest4 + 0) ./ ((-1) * 2226);
+    resp_chest5 = (resp_chest5 + 0) ./ ((-1) * 2226);
+    resp_chest6 = (resp_chest6 + 0) ./ ((-1) * 2226);
 
-    resp_chest = [resp_chest1 resp_chest2 resp_chest3 resp_chest4 resp_chest5 resp_chest6 resp_chest7];
+    resp_chest = [resp_chest1 resp_chest2 resp_chest3 resp_chest4 resp_chest5 resp_chest6];
 %%
 %---C4A1脑电数据重组
     C4A1_eeg1 = d1.val(3, :);
@@ -35,17 +30,15 @@ function recombinationData
     C4A1_eeg4 = d4.val(3, :);
     C4A1_eeg5 = d5.val(3, :);
     C4A1_eeg6 = d6.val(3, :);
-    C4A1_eeg7 = d7.val(3, :);
 
-    C4A1_eeg1 = (C4A1_eeg1 + 0) ./ ((-1) * 12220.8);
-    C4A1_eeg2 = (C4A1_eeg2 + 0) ./ ((-1) * 12220.8);
-    C4A1_eeg3 = (C4A1_eeg3 + 0) ./ ((-1) * 12220.8);
-    C4A1_eeg4 = (C4A1_eeg4 + 0) ./ ((-1) * 12220.8);
-    C4A1_eeg5 = (C4A1_eeg5 + 0) ./ ((-1) * 12220.8);
-    C4A1_eeg6 = (C4A1_eeg6 + 0) ./ ((-1) * 12220.8);
-    C4A1_eeg7 = (C4A1_eeg7 + 0) ./ ((-1) * 12220.8);
+    C4A1_eeg1 = (C4A1_eeg1 + 0) ./ ((-1) * 9028.57);
+    C4A1_eeg2 = (C4A1_eeg2 + 0) ./ ((-1) * 9028.57);
+    C4A1_eeg3 = (C4A1_eeg3 + 0) ./ ((-1) * 9028.57);
+    C4A1_eeg4 = (C4A1_eeg4 + 0) ./ ((-1) * 9028.57);
+    C4A1_eeg5 = (C4A1_eeg5 + 0) ./ ((-1) * 9028.57);
+    C4A1_eeg6 = (C4A1_eeg6 + 0) ./ ((-1) * 9028.57);
 
-    C4A1_eeg = [C4A1_eeg1 C4A1_eeg2 C4A1_eeg3 C4A1_eeg4 C4A1_eeg5 C4A1_eeg6 C4A1_eeg7] .* 1000;
+    C4A1_eeg = [C4A1_eeg1 C4A1_eeg2 C4A1_eeg3 C4A1_eeg4 C4A1_eeg5 C4A1_eeg6] .* 1000;
 %%
 %---心电数据重组
     ecg1 = d1.val(1, :);
@@ -54,7 +47,6 @@ function recombinationData
     ecg4 = d4.val(1, :);
     ecg5 = d5.val(1, :);
     ecg6 = d6.val(1, :);
-    ecg7 = d7.val(1, :);
 
     ecg1 = (ecg1 + 0) ./ ((-1) * 500);
     ecg2 = (ecg2 + 0) ./ ((-1) * 500);
@@ -62,9 +54,8 @@ function recombinationData
     ecg4 = (ecg4 + 0) ./ ((-1) * 500);
     ecg5 = (ecg5 + 0) ./ ((-1) * 500);
     ecg6 = (ecg6 + 0) ./ ((-1) * 500);
-    ecg7 = (ecg7 + 0) ./ ((-1) * 500);
 
-    ecg = [ecg1 ecg2 ecg3 ecg4 ecg5 ecg6 ecg7];
+    ecg = [ecg1 ecg2 ecg3 ecg4 ecg5 ecg6];
 %%
 %---眼电数据重组
     eog1 = d1.val(6, :);
@@ -73,17 +64,15 @@ function recombinationData
     eog4 = d4.val(6, :);
     eog5 = d5.val(6, :);
     eog6 = d6.val(6, :);
-    eog7 = d7.val(6, :);
 
-    eog1 = (eog1 + 0) ./ ((-1) * 2836);
-    eog2 = (eog2 + 0) ./ ((-1) * 2836);
-    eog3 = (eog3 + 0) ./ ((-1) * 2836);
-    eog4 = (eog4 + 0) ./ ((-1) * 2836);
-    eog5 = (eog5 + 0) ./ ((-1) * 2836);
-    eog6 = (eog6 + 0) ./ ((-1) * 2836);
-    eog7 = (eog7 + 0) ./ ((-1) * 2836);
+    eog1 = (eog1 + 0) ./ ((-1) * 2320);
+    eog2 = (eog2 + 0) ./ ((-1) * 2320);
+    eog3 = (eog3 + 0) ./ ((-1) * 2320);
+    eog4 = (eog4 + 0) ./ ((-1) * 2320);
+    eog5 = (eog5 + 0) ./ ((-1) * 2320);
+    eog6 = (eog6 + 0) ./ ((-1) * 2320);
 
-    eog = [eog1 eog2 eog3 eog4 eog5 eog6 eog7] .* 1000;
+    eog = [eog1 eog2 eog3 eog4 eog5 eog6] .* 1000;
 %%
 %---下颌肌电数据重组
     chin_emg1 = d1.val(7, :);
@@ -92,25 +81,23 @@ function recombinationData
     chin_emg4 = d4.val(7, :);
     chin_emg5 = d5.val(7, :);
     chin_emg6 = d6.val(7, :);
-    chin_emg7 = d7.val(7, :);
 
-    chin_emg1 = (chin_emg1 + 0) ./ ((-1) * 54105.4);
-    chin_emg2 = (chin_emg2 + 0) ./ ((-1) * 54105.4);
-    chin_emg3 = (chin_emg3 + 0) ./ ((-1) * 54105.4);
-    chin_emg4 = (chin_emg4 + 0) ./ ((-1) * 54105.4);
-    chin_emg5 = (chin_emg5 + 0) ./ ((-1) * 54105.4);
-    chin_emg6 = (chin_emg6 + 0) ./ ((-1) * 54105.4);
-    chin_emg7 = (chin_emg7 + 0) ./ ((-1) * 54105.4);
+    chin_emg1 = (chin_emg1 + 0) ./ ((-1) * 41613.3);
+    chin_emg2 = (chin_emg2 + 0) ./ ((-1) * 41613.3);
+    chin_emg3 = (chin_emg3 + 0) ./ ((-1) * 41613.3);
+    chin_emg4 = (chin_emg4 + 0) ./ ((-1) * 41613.3);
+    chin_emg5 = (chin_emg5 + 0) ./ ((-1) * 41613.3);
+    chin_emg6 = (chin_emg6 + 0) ./ ((-1) * 41613.3);
 
-    chin_emg = [chin_emg1 chin_emg2 chin_emg3 chin_emg4 chin_emg5 chin_emg6 chin_emg7] .* 1000;
+    chin_emg = [chin_emg1 chin_emg2 chin_emg3 chin_emg4 chin_emg5 chin_emg6] .* 1000;
 %%
-%---生成被试整晚数据
-    slp48_recm(1, :) = ecg;
-    slp48_recm(2, :) = resp_chest;
-    slp48_recm(3, :) = eog;
-    slp48_recm(4, :) = C4A1_eeg;
-    slp48_recm(5, :) = chin_emg;
+%---生成被试完整数据
+    slp_recm(1, :) = ecg;
+    slp_recm(2, :) = resp_chest;
+    slp_recm(3, :) = eog;
+    slp_recm(4, :) = C4A1_eeg;
+    slp_recm(5, :) = chin_emg;
     
-    save data/slp48_recm.mat slp48_recm;
+    save data/slp32_recm.mat slp_recm;
 end
 
