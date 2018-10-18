@@ -1,30 +1,28 @@
-% ´ò°üÊı¾İ²¢×ö¼òµ¥µÄÂË²¨´¦Àí
-% by Jim 2018.10.11
 function data_pkg = load_data(file_id)
     file_name = ['./data/slp', num2str(file_id), '_recm.mat'];
     data = load(file_name);
     
-    %µ¼³öPSGÊı¾İ
-    ecg = data.slp48_recm(1, :);
-    resp_chest = data.slp48_recm(2, :);
-    eog = data.slp48_recm(3, :);
-    EEG_C4A1 = data.slp48_recm(4, :);
-    chin_emg = data.slp48_recm(5, :);
-    %µ¼³öPSGÊı¾İ
+    %å¯¼å‡ºPSGæ•°æ®
+    ecg = data.slp_recm(1, :);
+    resp_chest = data.slp_recm(2, :);
+    eog = data.slp_recm(3, :);
+    EEG_C4A1 = data.slp_recm(4, :);
+    chin_emg = data.slp_recm(5, :);
+    %å¯¼å‡ºPSGæ•°æ®
     
-    %ÌáÈ¡PSGĞÅºÅÌØÕ÷Ô¤´¦Àí
+    %æå–PSGä¿¡å·ç‰¹å¾é¢„å¤„ç†
     eog = filter(EOG822_10Hz, eog);
     EEG_C4A1 = filter(EEG822_15Hz, EEG_C4A1);
     chin_emg = filter(EMG822_40Hz, chin_emg);
-    %ÌáÈ¡PSGĞÅºÅÌØÕ÷Ô¤´¦Àí
+    %æå–PSGä¿¡å·ç‰¹å¾é¢„å¤„ç†
     
-    %Ô¤´¦ÀíÍê³ÉºóÊı¾İ·â×°
+    %é¢„å¤„ç†å®Œæˆåæ•°æ®å°è£…
     data_pkg.ecg = ecg;
     data_pkg.resp_chest = resp_chest;
     data_pkg.eog = eog;
     data_pkg.chin_emg = chin_emg;
     data_pkg.EEG_C4A1 = EEG_C4A1;
-    data_pkg.sample_rate = 250;%²ÉÑùÂÊ
+    data_pkg.sample_rate = 250;%é‡‡æ ·ç‡
     data_pkg.file_id = file_id;
-    %Ô¤´¦ÀíÍê³ÉºóÊı¾İ·â×°
+    %é¢„å¤„ç†å®Œæˆåæ•°æ®å°è£…
 end
