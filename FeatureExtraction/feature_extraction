@@ -1,0 +1,207 @@
+%---数据预处理与特征提取 by Jim 2018.10.13
+function feature_extraction(file_id)
+%% 数据预处理
+    data_path = 'E:\GraduationProject\Practice1\materials\data\slpdb\';%文件绝对路径
+    file_name = ['slp', num2str(file_id), '\data\slp', num2str(file_id), '_recm.mat'];%文件名
+    data = load([data_path, file_name]);
+    %--------------%
+    % row1---ecg
+    % row2---resp_chest
+    % row3---eog
+    % row4---C4A1_eeg
+    % row5---chin_emg
+    %--------------%
+    %导出PSG数据
+    EEG_C4A1 = data.slp_recm(4, :);
+    EMG_Chin = data.slp_recm(5, :);
+    %导出PSG数据
+    %提取PSG信号特征预处理
+    EMG_Chin = filter(high_pass822, EMG_Chin);
+    EEG_C4A1 = filter(high_pass822, EEG_C4A1);
+    %提取PSG信号特征预处理
+%% 特征提取
+    sample_rate = 250;%采样率
+    seg_time = 30;%分段长度30s
+    
+    %提取的特征存放路径
+    features_path = ['E:\GraduationProject\Practice1\code\feature\slp', num2str(file_id), '\slp', num2str(file_id), '_features.xlsx'];
+    %特征统计分析结果存放路径
+    features_analysis_path = ['E:\GraduationProject\Practice1\code\feature\slp', num2str(file_id), '\slp', num2str(file_id), '_features_analysis.xlsx'];
+    %各个文件的专家分期
+    stage_path = ['E:\GraduationProject\Practice1\materials\data\slpdb\slp', num2str(file_id), '\slp' num2str(file_id), 'stages.txt'];
+    %存入表格的特征的索引
+    features_axis = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',...
+                     'T', 'U', 'V', 'W', 'X', 'Y', 'Z'};
+    signal_len = length(EEG_C4A1);%信号总长度
+    total_seg = floor(signal_len/sample_rate/seg_time);%分段总数(丢掉最后不完整的段)
+    
+    n_feature = 6; % 共提取6个特征
+    features = zeros(total_seg, n_feature);
+    
+    for epoch = 1 : total_seg
+        EEG_C4A1_epoch = EEG_C4A1((epoch-1)*seg_time*sample_rate+1 : epoch*seg_time*sample_rate);%提取特征段
+        EMG_Chin_epoch = EMG_Chin((epoch-1)*seg_time*sample_rate+1 : epoch*seg_time*sample_rate);%提取特征段
+        
+        [delta_e, theta_e, alpha_e, beta_e, SaEn] = eeg_feature(EEG_C4A1_epoch);
+        features(epoch, 1:5) = [delta_e, theta_e, alpha_e, beta_e, SaEn];
+        
+        emg_e = emg_feature(EMG_Chin_epoch);
+        features(epoch, 6) = emg_e;
+    end
+    stage = load(stage_path);%导入专家分期结果
+    time = (1 : total_seg) / 2;%计算分期时刻点
+    time = time';%转为列向量写入表格
+
+    %写入时刻点
+    time_len = length(time);
+    time_location = ['A2 : A', num2str(time_len+1)];
+    xlswrite(features_path, time, time_location);
+
+    %写入专家分期结果
+    stage_len = length(stage);
+    stage_location = [features_axis{n_feature+2}, '2 : ', features_axis{n_feature+2}, num2str(stage_len+1)];
+    xlswrite(features_path, stage, stage_location);
+    
+    %写入特征空间
+    features_location = ['B2 : ', features_axis{n_feature+1}, num2str(total_seg+1)];
+    xlswrite(features_path, features, features_location);
+    
+    % 特征统计分析
+    feature_analysis_result = zeros(n_feature, 5);
+    wake_idx = find(stage == 0);
+    rem_idx = find(stage == 1);
+    n1_idx = find(stage == 2);
+    n2_idx = find(stage == 3);
+    n3_idx = find(stage == 4);
+    for feature_col_idx = 1 : 6
+        feature_col = features(:, feature_col_idx);
+        wake_mean = mean(feature_col(wake_idx));
+        rem_mean = mean(feature_col(rem_idx));
+        n1_mean = mean(feature_col(n1_idx));
+        n2_mean = mean(feature_col(n2_idx));
+        n3_mean = mean(feature_col(n3_idx));
+        feature_analysis_result(feature_col_idx, :) = [wake_mean, rem_mean, n1_mean, n2_mean, n3_mean];
+    end
+    
+    features_location = ['B2 : ', features_axis{5+1}, num2str(6+1)];
+    xlswrite(features_analysis_path, feature_analysis_result, features_location);
+end
+%% 分段EEG小波分解与样本熵
+function [delta_e, theta_e, alpha_e, beta_e, SaEn] = eeg_feature(eeg_epoch)
+    [C, L] = wavedec(eeg_epoch, 7, 'db4');
+    % 启发式阈值去噪
+    [thr,sorh,keepapp] = ddencmp('den', 'wv', eeg_epoch);
+    clean = wdencmp('gbl', C, L, 'db4', 7, thr, sorh, keepapp);
+%     figure(1)
+%     plot(eeg_epoch)
+%     figure(2)
+%     plot(clean)
+    [C, L] = wavedec(clean, 7, 'db4');
+    % 获取各层细节系数
+    cD7 = detcoef(C,L,7);
+    cD6 = detcoef(C,L,6);
+    cD5 = detcoef(C,L,5);
+    cD4 = detcoef(C,L,4);
+    cD3 = detcoef(C,L,3);
+    cD2 = detcoef(C,L,2);
+    cD1 = detcoef(C,L,1);
+    
+    % -------------test----------- %
+    D1 = wrcoef('d',C,L,'db4',1);
+    D2 = wrcoef('d',C,L,'db4',2);
+    D3 = wrcoef('d',C,L,'db4',3);
+    D4 = wrcoef('d',C,L,'db4',4);
+    D5 = wrcoef('d',C,L,'db4',5);
+    D6 = wrcoef('d',C,L,'db4',6);
+    D7 = wrcoef('d',C,L,'db4',7);
+%     
+%     [p,Fre]=pwelch(D3,length(D3),250,length(D3),250);
+%     figure(1)
+%     plot(Fre, p);
+%     title('beta frequcy');
+%     
+%     [p,Fre]=pwelch(D4,length(D4),250,length(D4),250);
+%     figure(2)
+%     plot(Fre, p);
+%     title('alpha frequcy');
+%     
+%     [p,Fre]=pwelch(D5,length(D5),250,length(D5),250);
+%     figure(3)
+%     plot(Fre, p);
+%     title('theta frequcy');
+%     
+%     [p,Fre]=pwelch(D6,length(D6),250,length(D6),250);
+%     figure(4)
+%     plot(Fre, p);
+%     title('delta frequcy');
+%     
+%     [p,Fre]=pwelch(clean,length(clean),250,length(clean),250);
+%     figure(5)
+%     plot(Fre, p);
+%     title('full');
+    % -------------test----------- %
+    
+    % 0-30Hz总能量和
+%     e_s = sum(cD7 .* cD7) + sum(cD6 .* cD6) + sum(cD5 .* cD5) + sum(cD4 .* cD4) + ...
+%           sum(cD3 .* cD3);
+    e_s = sum(D7 .* D7) + sum(D6 .* D6) + sum(D5 .* D5) + sum(D4 .* D4) + ...
+          sum(D3 .* D3);
+    % δ波能量比
+    delta_e = (sum(D7 .* D7) + sum(D6 .* D6)) / e_s;
+    % θ波能量比
+    theta_e = sum(D5 .* D5) / e_s;
+    % α波能量比
+    alpha_e = sum(D4 .* D4) / e_s;
+    % β波能量比
+    beta_e = sum(D3 .* D3) / e_s;
+    % 样本熵
+    SaEn = sample_en(eeg_epoch);
+end
+%% 分段EMG小波分解
+function emg_e = emg_feature(emg_epoch)
+    [C, L] = wavedec(emg_epoch, 3, 'sym3');
+    % 启发式阈值去噪
+    [thr,sorh,keepapp] = ddencmp('den', 'wv', emg_epoch);
+    clean = wdencmp('gbl', C, L, 'sym3', 3, thr, sorh, keepapp);
+%     figure(1)
+%     plot(emg_epoch)
+%     figure(2)
+%     plot(clean)
+    [C, L] = wavedec(clean, 3, 'sym3');
+    % 获取各层细节系数
+    cD3 = detcoef(C,L,3);
+    cD2 = detcoef(C,L,2);
+    cD1 = detcoef(C,L,1);
+    
+    % -------------test----------- %
+    D1 = wrcoef('d',C,L,'sym3',1);
+    D2 = wrcoef('d',C,L,'sym3',2);
+    D3 = wrcoef('d',C,L,'sym3',3);
+%     
+%     [p,Fre]=pwelch(D3,length(D3),250,length(D3),250);
+%     figure(1)
+%     plot(Fre, p);
+%     title('16-31 frequcy');
+%     
+%     [p,Fre]=pwelch(D2,length(D2),250,length(D2),250);
+%     figure(2)
+%     plot(Fre, p);
+%     title('31-62 frequcy');
+%     
+%     [p,Fre]=pwelch(D1,length(D1),250,length(D1),250);
+%     figure(3)
+%     plot(Fre, p);
+%     title('63-125 frequcy');
+%     
+%     [p,Fre]=pwelch(clean,length(clean),250,length(clean),250);
+%     figure(4)
+%     plot(Fre, p);
+%     title('full');
+    % -------------test----------- %
+    
+    % 总能量和
+%     e_s = sum(cD3 .* cD3) + sum(cD2 .* cD2) + sum(cD1 .* cD1);
+    e_s = sum(D3 .* D3) + sum(D2 .* D2) + sum(D1 .* D1);
+    % δ波能量比
+    emg_e = (sum(D1 .* D1) + sum(D2 .* D2)) / e_s;
+end
