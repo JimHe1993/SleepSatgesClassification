@@ -1,0 +1,40 @@
+% 样本熵——参考文献《基于脑电和肌电多特征的自动睡眠分期方法》
+% by Jim 2018.10.16
+function SaEn = sample_en(eeg_epoch)
+    N = 1000; % 数据计算长度
+    epoch_len = length(eeg_epoch); % 信号长度
+    iters = floor(epoch_len / N); % 迭代次数
+    temp_en = zeros(iters, 1); % 信号子段熵
+    data = [];
+    for i = 1 : iters
+        if i == iters
+            data = eeg_epoch((i - 1) * N + 1 : end); % 信号补齐
+            N = length(data);
+        else
+            data = eeg_epoch((i - 1) * N + 1 : i * N);
+        end
+        m = 2; % 嵌入维度
+        r = 0.2 * std(data); % 相似容限
+        B = zeros(2, 1);
+        for j = 1 : 2
+            X = zeros(N-m+1, m);
+            for k = 1 : N-m+1
+                X(k, :) = data(k : k + m -1); % 矩阵构建
+            end
+            dis = zeros(N-m+1, N-m+1);
+            for k = 1 : N-m+1
+                for v = 1 : N-m+1
+                    dis(k, v) = max(abs(X(k, :) - X(v, :))); % 矢量距离
+                end
+            end
+            B_i = zeros(N-m+1, 1);
+            for k = 1 : N-m+1
+                B_i(k) = (length(find(dis(k, :) < r)) - 1) / (N - m);
+            end
+            B(j) = mean(B_i);
+            m = m + 1;
+        end
+        temp_en(i) = (-1) * log(B(2) / B(1)); % 熵值计算
+    end
+    SaEn = mean(temp_en); % 均值估计
+end
