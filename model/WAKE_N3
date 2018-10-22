@@ -1,0 +1,61 @@
+'''
+探讨 WAKE 和 N3 的分类情况（两个特征最显著的类别）
+by Jim 2018.10.22
+'''
+
+import numpy as np
+import pandas as pd
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+
+if __name__ == "__main__":
+    # 数据拼接
+    file_id = [32, 41, 45, 48]
+    path45 = 'E:\GraduationProject\Practice1\code\\feature\slp45\slp45_features.xlsx'
+    path48 = 'E:\GraduationProject\Practice1\code\\feature\slp48\slp48_features.xlsx'
+    slp45 = pd.read_excel(path45)
+    # print(slp45)
+    slp48 = pd.read_excel(path48)
+    # print(slp48)
+    slp45_feature = slp45.values[:, 1:6]
+    # print(slp45_feature)
+    slp45_stage = slp45.values[:, -1]
+    # print(slp45_stage)
+    slp45_feature_wake = slp45_feature[slp45_stage == 0]
+    slp45_feature_n3 = slp45_feature[slp45_stage == 4]
+    slp45_feature = np.r_[slp45_feature_wake, slp45_feature_n3]
+    # print(slp45_feature)
+    slp45_stage_wake = slp45_stage[slp45_stage == 0]
+    slp45_stage_n3 = slp45_stage[slp45_stage == 4]
+    slp45_stage = np.r_[slp45_stage_wake, slp45_stage_n3]
+    # print(slp45_stage)
+    slp48_feature = slp48.values[:, 1:6]
+    # print(slp48_feature)
+    slp48_stage = slp48.values[:, -1]
+    # print(slp48_stage)
+    slp48_feature_wake = slp48_feature[slp48_stage == 0]
+    slp48_feature_n3 = slp48_feature[slp48_stage == 4]
+    slp48_feature = np.r_[slp48_feature_wake, slp48_feature_n3]
+    # print(slp48_feature)
+    slp48_stage_wake = slp48_stage[slp48_stage == 0]
+    slp48_stage_n3 = slp48_stage[slp48_stage == 4]
+    slp48_stage = np.r_[slp48_stage_wake, slp48_stage_n3]
+    # print(slp48_stage)
+    feature = np.r_[slp45_feature, slp48_feature]
+    print(feature.shape)
+    stage = np.r_[slp45_stage, slp48_stage]
+    print(stage.shape)
+
+    # 模型构建
+    # 数据归一化
+    scaler = StandardScaler().fit(feature)
+    feature = scaler.transform(feature)
+
+    train_feature, test_feature, train_stage, test_stage = train_test_split(feature, stage, test_size=.3, train_size=.7,
+                                                                            random_state=1)
+    lr = LogisticRegression(solver='sag', n_jobs=-1, multi_class='multinomial')
+    lr.fit(train_feature, train_stage)
+    print('训练集：', lr.score(train_feature, train_stage))
+    print('测试集：', lr.score(test_feature, test_stage))
